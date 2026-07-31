@@ -54,7 +54,7 @@ It's a great way to understand, concretely:
 No checkpoint download, no GPU, no dataset. Just PyTorch:
 
 ```bash
-git clone https://github.com/<you>/segment-anything.git   # this repo
+git clone https://github.com/DreamRunnerMoshi/segment-anything.git
 cd segment-anything
 python3 -m venv .venv
 .venv/bin/pip install torch numpy
