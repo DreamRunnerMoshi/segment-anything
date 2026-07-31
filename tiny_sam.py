@@ -1,5 +1,5 @@
 """
-training_loop_demo.py — one SAM training loop, reconstructed step by step.````
+tiny_sam.py — one SAM training loop, reconstructed step by step.
 
 The official repo is inference-only (no training code ships with it). This
 script rebuilds the training procedure from the paper:
@@ -30,7 +30,7 @@ images) and use synthetic circle-on-noise images, so the full pipeline —
 prompt sampling, multi-mask selection, error-driven re-prompting, mask
 feedback, all three losses — runs in seconds on a laptop.
 
-Run:  .venv/bin/python training_loop_demo.py
+Run:  .venv/bin/python tiny_sam.py
 """
 
 import os

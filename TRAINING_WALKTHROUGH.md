@@ -1,10 +1,10 @@
 # SAM Training Loop — Step-by-Step Walkthrough
 
-A companion guide to [`training_loop_demo.py`](training_loop_demo.py), which simulates
+A companion guide to [`tiny_sam.py`](tiny_sam.py), which simulates
 one complete SAM training step on synthetic data.
 
 > **Why a demo file?** The official repo ships **inference code only** — there is no
-> training script. `training_loop_demo.py` reconstructs the training procedure from the
+> training script. `tiny_sam.py` reconstructs the training procedure from the
 > paper (Kirillov et al., *"Segment Anything"*, ICCV 2023, §3.1 "Training"), shrunk so
 > the full pipeline runs in seconds on a laptop.
 
@@ -12,7 +12,7 @@ one complete SAM training step on synthetic data.
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install torch torchvision numpy
+.venv/bin/pip install torch numpy
 .venv/bin/python tiny_sam.py
 ```
 
@@ -32,11 +32,13 @@ training all of it end-to-end, as in the paper
 
 === fresh synthetic batch every step (like streaming from SA-1B) ===
 step  0  loss   2.652   IoU it1 0.119 -> it3 0.080   |grad| 1.74
-...
-step  9  loss   2.749   IoU it1 0.509 -> it3 0.482   |grad| 2.41
+step 19  loss   1.529   IoU it1 0.818 -> it3 0.816   |grad| 3.39
+step 49  loss   0.286   IoU it1 0.859 -> it3 0.865   |grad| 1.00
+step 99  loss   0.096   IoU it1 0.958 -> it3 0.960   |grad| 0.89
 ```
 
-Mean IoU climbs from **0.08 → 0.5 in 10 steps** on unseen images — the loop genuinely trains segmentation.
+Mean IoU climbs from **0.08 → ~0.96 over 100 steps** on unseen images (already ~0.5 by
+step 10) — the loop genuinely trains segmentation, from scratch.
 
 ---
 
@@ -158,16 +160,17 @@ several prompts at once. The demo's `decode()` helper mirrors that per-image loo
 | 3-iteration prompt sampling from error regions | Tiny model (355K params) vs ViT-H (632M) |
 | Multi-mask → supervise best mask + IoU head | 128px images vs 1024px |
 | Focal + dice + IoU MSE losses | Synthetic circles vs SA-1B (11M images, 1.1B masks) |
-| Mask-logit feedback between iterations | Batch 4 / 10 steps vs batch 256 / 665K iterations |
+| Mask-logit feedback between iterations | Batch 4 / 100 steps vs batch 256 / 665K iterations |
 | End-to-end training of encoder + decoder | Paper also uses 64 overlapping 300×300 crops per image, freezes the encoder late in training, and filters targets with a stability score |
 
 ---
 
 ## Experiments to deepen understanding
 
-Try these small changes in `training_loop_demo.py`:
+Try these small changes in `tiny_sam.py`:
 
-- **`N_STEPS = 100`** — watch IoU approach ~0.9+; confirms the loop genuinely learns.
+- **`N_STEPS = 300`** — watch IoU saturate near 1.0 (the default 100 already reaches ~0.96);
+  confirms it *learns*, not memorizes, since every step draws a fresh random image.
 - **Freeze the encoder** — reproduces SAM's late-training stage:
   ```python
   for p in sam.image_encoder.parameters():
